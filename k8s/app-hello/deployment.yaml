@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hello-node
+  name: hello-node
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-node
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: hello-node
+    spec:
+      containers:
+        - image: embarkx/hello-node
+          name: hello-node
+          env:
+            - name: ENV_VALUE
+              valueFrom:
+                configMapKeyRef:
+                  name: config-app
+                  key: APP_MESSAGE
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: my-secret
+                  key: password
+          ports:
+            - containerPort: 3000
+
+status: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-node
+  labels:
+    app: hello-node
+spec:
+  selector:
+    app: hello-node
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 31200
